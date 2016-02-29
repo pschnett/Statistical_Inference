@@ -1,0 +1,60 @@
+---
+title: "Statistical Inference Project Assignment 2"
+author: "Pete Schnettler"
+date: "January 13, 2016"
+output: html_document
+---
+
+# 1. Load the ToothGrowth data and perform some basic exploratory data analy
+
+```{r}
+data(ToothGrowth)
+boxplot(len ~ supp * dose, data=ToothGrowth, ylab="Tooth Length", main="Boxplot of Tooth Growth Data")
+```
+
+It appears that tooth length increases as the dosage increases.
+
+# 2. Provide a basic summary of the data 
+
+The `ToothGrowth` data set contains "... *The response is the length of
+odontoblasts (teeth) in each of 10 guinea pigs at each of three dose levels of 
+Vitamin C (0.5, 1, and 2 mg) with each of two delivery methods (orange juice 
+or ascorbic acid).* ..." [Ref.; C. I. Bliss (1952) The Statistics of Bioassay.
+Academic Press] 
+
+# 3. Use confidence intervals and hypothesis tests to compare tooth growth by supp and dose. (Use the techniques from class even if there's other approaches worth considering)
+
+
+```{r results='asis'}
+
+ToothGrowth$dose <- as.factor(ToothGrowth$dose)
+
+#for each of the three dosage levels calculate the test values
+ts <- lapply(c(.5, 1, 2), function(x) {
+    t.test(len ~ supp, data=subset(ToothGrowth, dose==x), paired=FALSE, var.equal=FALSE)
+    })
+pvals <- c(ts[[1]]$p.value, ts[[2]]$p.value, ts[[3]]$p.value)
+stats <- c(ts[[1]]$statistic, ts[[2]]$statistic, ts[[3]]$statistic)
+lls <- sapply(c(ts[[1]]$conf.int[1], ts[[2]]$conf.int[1], ts[[3]]$conf.int[1]), round, 3)
+uls <- sapply(c(ts[[1]]$conf.int[2], ts[[2]]$conf.int[2], ts[[3]]$conf.int[2]), round, 3)
+df <- data.frame(dose=c(0.5, 1, 2), t=stats, p=pvals, 
+                 ci=paste0("[",paste(lls, uls, sep=", "), "]"))
+colnames(df) <- c("Dose", "t", "p-value", "conf. int.")
+
+library(knitr)
+kable(df)
+```
+
+
+
+
+### Conclusions
+
+
+- At the 0.5 and 1 mg dose levels, when we have a p-value is less than .05 which would   indicate strongly against the null hypothesis.  Our p-values are .0064 and .0010 respectively, where we can say that there is a meaningful difference between the two methods.
+- For the 2 mg dose level, with a p-value greater that .05, we fail to reject the null hypothesis, which would indicate no significant difference between the methods.
+- From the boxplot above, the dosage does have an effect on tooth growth.  
+
+
+
+
